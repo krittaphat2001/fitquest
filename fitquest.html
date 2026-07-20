@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+<title>FitQuest</title>
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="FitQuest" />
+<meta name="theme-color" content="#141829" />
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIj48cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgcng9IjQwIiBmaWxsPSIjMTQxODI5Ii8+PGNpcmNsZSBjeD0iOTAiIGN5PSI5MCIgcj0iNTIiIGZpbGw9IiNGRkM1M0QiLz48dGV4dCB4PSI5MCIgeT0iMTA4IiBmb250LXNpemU9IjU2IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjN0E1NjA2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7guL88L3RleHQ+PC9zdmc+" />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg:#141829; --panel:#1D2340; --panel2:#232A4D;
+    --ink:#EDEFF9; --dim:#8B93B8; --line:#2E3560;
+    --gold:#FFC53D; --earn:#3DDC97; --spend:#FF6B6B;
+    --display:'Chakra Petch',system-ui,sans-serif;
+    --body:'Inter',system-ui,sans-serif;
+  }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { margin:0; background:var(--bg); }
+  body {
+    color:var(--ink); font-family:var(--body);
+    max-width:480px; margin:0 auto; min-height:100vh; position:relative;
+    padding-bottom:calc(84px + env(safe-area-inset-bottom));
+    -webkit-user-select:none; user-select:none;
+  }
+  input { -webkit-user-select:text; user-select:text; }
+  .header {
+    position:sticky; top:0; z-index:10;
+    background:linear-gradient(180deg,#1A2040,var(--bg));
+    padding:calc(18px + env(safe-area-inset-top)) 20px 14px; border-bottom:1px solid var(--line);
+  }
+  .title { font-family:var(--display); font-weight:700; font-size:15px; letter-spacing:2px; color:var(--dim); text-transform:uppercase; }
+  .balance-row { display:flex; align-items:center; gap:14px; margin-top:8px; }
+  .coin {
+    width:52px; height:52px; border-radius:50%; flex-shrink:0;
+    background:radial-gradient(circle at 35% 30%,#FFE08A,var(--gold) 55%,#C98F12);
+    box-shadow:0 3px 0 #8A6208,0 6px 16px rgba(255,197,61,.35);
+    display:grid; place-items:center; font-family:var(--display); font-weight:700;
+    color:#7A5606; font-size:22px; transition:transform .6s cubic-bezier(.2,1.6,.4,1);
+  }
+  .balance { font-family:var(--display); font-size:40px; font-weight:700; line-height:1; color:var(--gold); }
+  .balance small { font-size:13px; color:var(--dim); font-family:var(--body); font-weight:500; display:block; margin-top:2px; }
+  .streak { margin-left:auto; text-align:right; font-family:var(--display); font-weight:600; color:#FF9E5E; font-size:15px; }
+  .streak span { display:block; font-family:var(--body); font-weight:500; color:var(--dim); font-size:11px; }
+  .rankbar-wrap { margin-top:14px; }
+  .rankbar-top { display:flex; justify-content:space-between; align-items:baseline; font-size:12px; margin-bottom:5px; }
+  .rankbar-top b { font-family:var(--display); font-size:14px; letter-spacing:.5px; }
+  .rankbar { height:7px; background:var(--panel2); border-radius:4px; overflow:hidden; }
+  .rankbar div { height:100%; background:linear-gradient(90deg,#C98F12,var(--gold)); border-radius:4px; transition:width .5s ease; }
+  .float { position:absolute; right:24px; top:calc(64px + env(safe-area-inset-top)); font-family:var(--display); font-weight:700; font-size:22px; pointer-events:none; animation:rise 1.4s ease-out forwards; text-align:right; max-width:60%; }
+  @keyframes rise { 0%{opacity:0;transform:translateY(8px);} 15%{opacity:1;} 100%{opacity:0;transform:translateY(-44px);} }
+  .section { padding:18px 20px 4px; }
+  .h { font-family:var(--display); font-weight:600; font-size:13px; letter-spacing:1.5px; text-transform:uppercase; color:var(--dim); margin-bottom:10px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-bottom:10px; display:flex; align-items:center; gap:12px; }
+  .card.done { opacity:.45; }
+  .icon { font-size:26px; width:34px; text-align:center; flex-shrink:0; }
+  .label { font-weight:600; font-size:15px; }
+  .sub { font-size:12px; color:var(--dim); margin-top:2px; }
+  .lvl { color:var(--gold); font-weight:700; }
+  .btn { margin-left:auto; border:none; cursor:pointer; flex-shrink:0; font-family:var(--display); font-weight:700; font-size:14px; background:var(--earn); color:#06331F; border-radius:10px; padding:10px 14px; box-shadow:0 2px 0 #1F9A66; }
+  .btn:active { transform:translateY(2px); box-shadow:none; }
+  .btn.gold { background:var(--gold); color:#6B4B04; box-shadow:0 2px 0 #B58412; }
+  .btn.ghost { background:var(--panel2); color:var(--dim); box-shadow:none; }
+  .run { display:flex; align-items:center; gap:10px; }
+  .step { width:38px; height:38px; border-radius:10px; border:1px solid var(--line); background:var(--panel2); color:var(--ink); font-size:20px; font-weight:700; cursor:pointer; }
+  .km { font-family:var(--display); font-size:20px; font-weight:700; min-width:64px; text-align:center; }
+  .note { font-size:12px; color:var(--dim); padding:4px 2px 12px; line-height:1.5; }
+  /* rotation tracker */
+  .rot { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:12px 14px; margin-bottom:10px; }
+  .rot-pills { display:flex; gap:8px; }
+  .rot-pills span { flex:1; text-align:center; padding:9px 0; border-radius:9px; font-family:var(--display); font-weight:700; font-size:13px; background:var(--panel2); color:var(--dim); border:1px solid var(--line); transition:all .2s; }
+  .rot-pills span.on { background:linear-gradient(180deg,#2E3968,#222a52); color:var(--gold); border-color:var(--gold); }
+  .rot-info { font-size:11px; color:var(--dim); margin-top:9px; text-align:center; }
+  .rot-info b { color:var(--gold); font-family:var(--display); }
+  /* stat row */
+  .stat-row { display:flex; gap:8px; padding:0 2px 14px; }
+  .stat-row > span { flex:1; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:9px 6px; text-align:center; font-size:10px; color:var(--dim); letter-spacing:.5px; text-transform:uppercase; }
+  .stat-row b { display:block; font-family:var(--display); font-size:18px; color:var(--gold); margin-top:3px; letter-spacing:0; text-transform:none; }
+  .tabs { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:480px; display:flex; z-index:20; background:rgba(16,20,35,.72); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); border-top:1px solid var(--line); padding-bottom:env(safe-area-inset-bottom); }
+  .tab { flex:1; padding:12px 0 16px; background:none; border:none; color:var(--dim); font-family:var(--display); font-weight:600; font-size:11px; letter-spacing:.5px; cursor:pointer; }
+  .tab.on { color:var(--gold); }
+  .tab div { font-size:20px; margin-bottom:3px; }
+  .bars { display:flex; align-items:flex-end; gap:8px; height:110px; padding:10px 4px 0; }
+  .bar-wrap { flex:1; text-align:center; }
+  .bar { background:linear-gradient(180deg,var(--gold),#C98F12); border-radius:6px 6px 2px 2px; min-height:3px; }
+  .bar-day { font-size:10px; color:var(--dim); margin-top:6px; }
+  .tx { display:flex; align-items:center; gap:10px; padding:11px 2px; border-bottom:1px solid var(--line); font-size:14px; }
+  .tx:last-child { border-bottom:none; }
+  .tx-amt { margin-left:auto; font-family:var(--display); font-weight:700; }
+  .badges { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .badge { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px 8px; text-align:center; }
+  .badge.locked { opacity:.32; }
+  .badge .bi { font-size:30px; }
+  .badge .bn { font-family:var(--display); font-weight:600; font-size:12px; margin-top:6px; }
+  .badge .bd { font-size:10px; color:var(--dim); margin-top:3px; line-height:1.3; }
+  .wt-input { display:flex; gap:10px; align-items:center; }
+  .wt-input input { flex:1; background:var(--panel2); border:1px solid var(--line); border-radius:10px; color:var(--ink); font-size:18px; font-family:var(--display); font-weight:700; padding:11px 14px; width:100%; }
+  .wt-input input:focus { outline:none; border-color:var(--gold); }
+  .wt-big { font-family:var(--display); font-weight:700; font-size:36px; color:var(--gold); line-height:1; }
+  .wt-delta { font-size:13px; margin-top:4px; }
+  .toast { position:fixed; bottom:calc(96px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); background:var(--panel2); border:1px solid var(--line); color:var(--ink); padding:11px 18px; border-radius:12px; font-size:14px; font-weight:500; z-index:30; width:max-content; max-width:90vw; text-align:center; animation:tin .25s ease-out; }
+  @keyframes tin { from{opacity:0;transform:translate(-50%,8px);} to{opacity:1;transform:translate(-50%,0);} }
+  .hidden { display:none; }
+  .reset { display:block; margin:20px auto 8px; background:none; border:1px solid var(--line); color:var(--dim); font-size:12px; padding:8px 16px; border-radius:8px; font-family:var(--body); }
+  @media (prefers-reduced-motion:reduce){ .float,.toast{animation:none;} .coin{transition:none;} }
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="title">FitQuest · Achievement Game</div>
+  <div class="balance-row">
+    <div class="coin" id="coin">฿</div>
+    <div class="balance"><span id="coins">0</span><small>coins in your vault</small></div>
+    <div class="streak">🔥 <span id="streakN" style="display:inline;">0</span><span>day streak</span></div>
+  </div>
+  <div class="rankbar-wrap">
+    <div class="rankbar-top">
+      <b id="rankName">🌱 Rookie</b>
+      <span id="rankNext" style="color:var(--dim)"></span>
+    </div>
+    <div class="rankbar"><div id="rankFill" style="width:0%"></div></div>
+  </div>
+</header>
+
+<main id="views">
+  <!-- EARN -->
+  <div id="view-earn">
+    <section class="section">
+      <div class="h">Weight training · once per day each</div>
+      <div class="rot">
+        <div class="rot-pills">
+          <span data-p="push">Push</span>
+          <span data-p="pull">Pull</span>
+          <span data-p="legs">Legs</span>
+        </div>
+        <div class="rot-info">Complete the set for a <b>+<span id="rotBonus">40</span></b> combo · <b id="rotCount">0</b> rotations done</div>
+      </div>
+      <div id="workouts"></div>
+    </section>
+    <section class="section">
+      <div class="h">Running · <span id="runRate">10</span> coins per km</div>
+      <div class="card">
+        <div class="icon">🏃</div>
+        <div class="run">
+          <button class="step" id="runMinus">−</button>
+          <div class="km"><span id="runKm">3</span> km</div>
+          <button class="step" id="runPlus">+</button>
+        </div>
+        <button class="btn" id="runLog">+30</button>
+      </div>
+      <div class="stat-row">
+        <span>Total<b id="runTotal">0</b>km</span>
+        <span>Longest<b id="runLongest">0</b>km</span>
+        <span>Next club<b id="runNext">10</b>km</span>
+      </div>
+    </section>
+    <section class="section">
+      <div class="h">Daily habits</div>
+      <div id="habits"></div>
+      <p class="note" id="streakNote"></p>
+    </section>
+  </div>
+
+  <!-- SHOP -->
+  <div id="view-shop" class="hidden">
+    <section class="section">
+      <div class="h">Reward shop · spend what you earned</div>
+      <div id="rewards"></div>
+      <p class="note">Priced by damage: a KitKat is a quick win, KFC is a real splurge. A full PPL week (3 sessions + a couple of runs) ≈ 200 coins.</p>
+    </section>
+  </div>
+
+  <!-- WEIGHT -->
+  <div id="view-weight" class="hidden">
+    <section class="section">
+      <div class="h">Log today's weight</div>
+      <div class="card" style="display:block;">
+        <div class="wt-input">
+          <input id="wtInput" type="number" inputmode="decimal" step="0.1" placeholder="e.g. 72.5" />
+          <button class="btn gold" id="wtLog" style="margin-left:0;">Log kg</button>
+        </div>
+      </div>
+    </section>
+    <section class="section">
+      <div class="h">Your trend</div>
+      <div class="card" style="display:block;">
+        <div id="wtSummary"></div>
+        <div id="wtChart" style="margin-top:12px;"></div>
+      </div>
+      <p class="note">No coins here on purpose — the scale is your scoreboard, not a slot machine. Coins come from what you do; this just shows the payoff over weeks.</p>
+    </section>
+  </div>
+
+  <!-- QUEST -->
+  <div id="view-quest" class="hidden">
+    <section class="section">
+      <div class="h">Achievements</div>
+      <div class="badges" id="badges"></div>
+    </section>
+    <section class="section">
+      <div class="h">Coins earned · last 7 days (<span id="weekTotal">0</span> total)</div>
+      <div class="card" style="display:block;"><div class="bars" id="bars"></div></div>
+    </section>
+    <section class="section">
+      <div class="h">Recent activity</div>
+      <div class="card" style="display:block; padding:4px 16px;" id="txList"></div>
+      <button class="reset" id="resetBtn">Reset all data</button>
+    </section>
+  </div>
+</main>
+
+<nav class="tabs">
+  <button class="tab on" data-tab="earn"><div>⚔️</div>Earn</button>
+  <button class="tab" data-tab="shop"><div>🏪</div>Shop</button>
+  <button class="tab" data-tab="weight"><div>⚖️</div>Weight</button>
+  <button class="tab" data-tab="quest"><div>🏅</div>Quest</button>
+</nav>
+
+<script>
+// ---------- config (edit these numbers to tune your economy) ----------
+const WORKOUTS = [
+  { id:"push", label:"Push Day", sub:"Chest · Shoulders · Triceps", coins:50, icon:"🏋️" },
+  { id:"pull", label:"Pull Day", sub:"Back · Biceps", coins:50, icon:"💪" },
+  { id:"legs", label:"Leg Day", sub:"Quads · Hamstrings · Glutes", coins:60, icon:"🦵" },
+];
+const HABITS = [
+  { id:"steps", label:"8,000+ steps", coins:10, icon:"👟" },
+  { id:"water", label:"2L of water", coins:5, icon:"💧" },
+  { id:"sleep", label:"7+ hours sleep", coins:10, icon:"😴" },
+  { id:"nosugar", label:"No added sugar", coins:15, icon:"🚫" },
+];
+const REWARDS = [
+  { id:"softdrink", label:"Soft drink", sub:"One can or cup", cost:40, icon:"🥤" },
+  { id:"kitkat", label:"KitKat", sub:"One bar", cost:50, icon:"🍫" },
+  { id:"cocoa", label:"Hot cocoa", sub:"One mug", cost:80, icon:"☕" },
+  { id:"latte", label:"Latte", sub:"One cup", cost:80, icon:"🥛" },
+  { id:"icecream", label:"Ice cream", sub:"One scoop or cone", cost:90, icon:"🍦" },
+  { id:"fried", label:"Fried snacks", sub:"Fries, nuggets, tempura", cost:110, icon:"🍟" },
+  { id:"bakery", label:"Bakery treat", sub:"Croissant, cake, bun", cost:130, icon:"🥐" },
+  { id:"kfc", label:"KFC", sub:"Full fried-chicken meal", cost:280, icon:"🍗" },
+  { id:"buffet", label:"Buffet", sub:"All-you-can-eat blowout", cost:340, icon:"🍽️" },
+];
+const RUN_RATE = 10;
+const STREAK_MILESTONES = [3,7,14,21,30];
+const STREAK_BONUS = 30;
+// --- achievement tuning ---
+const PR_BONUS = 20;                 // beating your longest run
+const ROTATION_BONUS = 40;           // completing push + pull + legs
+const SPLIT_STEP = 5;                // sessions per split level-up
+const DISTANCE_MILESTONES = [        // cumulative-km clubs (one-time bonuses)
+  { km:10,  bonus:30 },  { km:25,  bonus:40 },  { km:50,  bonus:60 },
+  { km:100, bonus:100 }, { km:250, bonus:150 }, { km:500, bonus:250 },
+];
+const RANKS = [
+  { name:"Rookie",   min:0,     icon:"🌱" },
+  { name:"Bronze",   min:500,   icon:"🥉" },
+  { name:"Silver",   min:1500,  icon:"🥈" },
+  { name:"Gold",     min:3500,  icon:"🥇" },
+  { name:"Platinum", min:7000,  icon:"🏆" },
+  { name:"Diamond",  min:12000, icon:"💎" },
+];
+const KEY = "fitquest-v2";
+
+// ---------- state ----------
+const empty = {
+  coins:0, transactions:[], workoutsByDate:{}, habitsByDate:{}, weightLog:[],
+  runStats:{ totalKm:0, longest:0, milestones:[] },
+  rotationProgress:{ push:false, pull:false, legs:false }, rotations:0,
+};
+let state = load();
+let runKm = 3;
+let coinSpins = 0;
+
+function normalize(o){
+  o = { ...empty, ...o };
+  o.runStats = { ...empty.runStats, ...(o.runStats||{}) };
+  o.runStats.milestones = o.runStats.milestones || [];
+  o.rotationProgress = { ...empty.rotationProgress, ...(o.rotationProgress||{}) };
+  o.rotations = o.rotations || 0;
+  // backfill run stats from history the first time we upgrade
+  if(!o.runStats.totalKm && !o.runStats.longest){
+    let total=0, longest=0;
+    (o.transactions||[]).forEach(x=>{
+      const m = /^Run ([\d.]+) km$/.exec(x.label);
+      if(m){ const k=parseFloat(m[1]); total+=k; longest=Math.max(longest,k); }
+    });
+    o.runStats.totalKm = +total.toFixed(2);
+    o.runStats.longest = longest;
+    o.runStats.milestones = DISTANCE_MILESTONES.filter(mm=>o.runStats.totalKm>=mm.km).map(mm=>mm.km);
+  }
+  return o;
+}
+function load(){
+  try { const r = localStorage.getItem(KEY); if(r) return normalize(JSON.parse(r)); } catch(e){}
+  try { const old = localStorage.getItem("fitquest-v1"); if(old) return normalize(JSON.parse(old)); } catch(e){}
+  return normalize({});
+}
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){} }
+
+function iso(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function today(){ return iso(new Date()); }
+function daysAgo(n){ const d=new Date(); d.setDate(d.getDate()-n); return iso(d); }
+
+// ---------- derived ----------
+function currentStreak(){
+  const w = state.workoutsByDate; let s=0, off=0;
+  if(!w[today()] || w[today()].length===0) off=1;
+  for(let i=off;i<400;i++){ const d=daysAgo(i); if(w[d]&&w[d].length>0) s++; else break; }
+  return s;
+}
+function bestStreak(){
+  const dates = Object.keys(state.workoutsByDate).filter(d=>state.workoutsByDate[d].length>0).sort();
+  let best=0, run=0, prev=null;
+  for(const d of dates){
+    if(prev){ const gap=(new Date(d)-new Date(prev))/86400000; run = gap===1 ? run+1 : 1; } else run=1;
+    best=Math.max(best,run); prev=d;
+  }
+  return best;
+}
+function lifetime(){ return state.transactions.filter(x=>x.kind==="earn").reduce((s,x)=>s+x.amount,0); }
+function runCount(){ return state.transactions.filter(x=>x.kind==="earn" && x.label.startsWith("Run ")).length; }
+function splitCount(id){ let c=0; for(const d in state.workoutsByDate){ c += state.workoutsByDate[d].filter(x=>x===id).length; } return c; }
+function splitLevel(id){ return Math.floor(splitCount(id)/SPLIT_STEP)+1; }
+function workoutDays(){ return Object.keys(state.workoutsByDate).filter(d=>state.workoutsByDate[d].length>0).length; }
+function rankInfo(){
+  const lt = lifetime(); let cur = RANKS[0], next = null;
+  for(let i=0;i<RANKS.length;i++){ if(lt>=RANKS[i].min){ cur=RANKS[i]; next=RANKS[i+1]||null; } }
+  const pct = next ? Math.min(100, Math.round((lt-cur.min)/(next.min-cur.min)*100)) : 100;
+  return { cur, next, pct, toNext: next ? next.min-lt : 0 };
+}
+
+const BADGES = [
+  { id:"first",  icon:"🏋️", name:"First Rep",  desc:"Log any workout",     test:()=>workoutDays()>=1 },
+  { id:"fire",   icon:"🔥", name:"On Fire",    desc:"Hit a 7-day streak",  test:()=>bestStreak()>=7 },
+  { id:"road",   icon:"🏃", name:"Roadrunner", desc:"Log 10 runs",         test:()=>runCount()>=10 },
+  { id:"km50",   icon:"🛣️", name:"50 km Club", desc:"Run 50 km total",     test:()=>state.runStats.totalKm>=50 },
+  { id:"km100",  icon:"🏅", name:"Century",    desc:"Run 100 km total",    test:()=>state.runStats.totalKm>=100 },
+  { id:"rot5",   icon:"🔄", name:"Balanced",   desc:"5 full rotations",    test:()=>(state.rotations||0)>=5 },
+  { id:"rich",   icon:"💰", name:"High Roller",desc:"Earn 1,000 total",    test:()=>lifetime()>=1000 },
+  { id:"iron",   icon:"📅", name:"Iron Habit", desc:"Train on 30 days",    test:()=>workoutDays()>=30 },
+  { id:"legend", icon:"💎", name:"Legend",     desc:"Reach Diamond",       test:()=>lifetime()>=12000 },
+];
+
+// ---------- mutations ----------
+function addTx(kind,label,amount){
+  state.coins += kind==="earn" ? amount : -amount;
+  state.transactions.unshift({ id:Date.now()+Math.random(), kind, label, amount, date:today() });
+  state.transactions = state.transactions.slice(0,200);
+}
+function logWorkout(w){
+  const t=today(); const done=state.workoutsByDate[t]||[];
+  if(done.includes(w.id)) return;
+  addTx("earn", w.label, w.coins);
+  state.workoutsByDate[t] = [...done, w.id];
+  const bonuses=[];
+  const s = currentStreak();
+  if(STREAK_MILESTONES.includes(s) && done.length===0){
+    addTx("earn", s+"-day streak bonus", STREAK_BONUS);
+    bonuses.push("🔥 "+s+"-day streak +"+STREAK_BONUS);
+  }
+  // PPL rotation combo
+  if(!state.rotationProgress[w.id]){
+    state.rotationProgress[w.id] = true;
+    if(state.rotationProgress.push && state.rotationProgress.pull && state.rotationProgress.legs){
+      addTx("earn", "Full PPL rotation", ROTATION_BONUS);
+      state.rotations = (state.rotations||0)+1;
+      state.rotationProgress = { push:false, pull:false, legs:false };
+      bonuses.push("🔄 Rotation complete +"+ROTATION_BONUS);
+    }
+  }
+  save();
+  popFloat("+"+w.coins+(bonuses.length?" ✦":""), "#3DDC97");
+  if(bonuses.length) toast(bonuses.join("   ·   "));
+  render();
+}
+function logRun(){
+  if(runKm<=0) return;
+  const base = Math.round(runKm*RUN_RATE);
+  addTx("earn", "Run "+runKm+" km", base);
+  const t=today(); const done=state.workoutsByDate[t]||[];
+  state.workoutsByDate[t] = [...done, "run-"+Date.now()];
+  state.runStats.totalKm = +(state.runStats.totalKm + runKm).toFixed(2);
+  const bonuses=[];
+  const priorRuns = state.transactions.filter(x=>x.label.startsWith("Run ")).length; // includes this one
+  if(runKm > state.runStats.longest){
+    state.runStats.longest = runKm;
+    if(priorRuns > 1){ addTx("earn", "Distance PR "+runKm+" km", PR_BONUS); bonuses.push("🎽 New PR +"+PR_BONUS); }
+  }
+  for(const m of DISTANCE_MILESTONES){
+    if(state.runStats.totalKm >= m.km && !state.runStats.milestones.includes(m.km)){
+      state.runStats.milestones.push(m.km);
+      addTx("earn", m.km+" km club", m.bonus);
+      bonuses.push("🏅 "+m.km+" km club +"+m.bonus);
+    }
+  }
+  save();
+  popFloat("+"+base+(bonuses.length?" ✦":""), "#3DDC97");
+  if(bonuses.length) toast(bonuses.join("   ·   "));
+  render();
+}
+function toggleHabit(h){
+  const t=today(); const done=state.habitsByDate[t]||[];
+  if(done.includes(h.id)) return;
+  addTx("earn", h.label, h.coins);
+  state.habitsByDate[t] = [...done, h.id];
+  save(); popFloat("+"+h.coins,"#3DDC97"); render();
+}
+function redeem(r){
+  if(state.coins < r.cost){ toast("Need "+(r.cost-state.coins)+" more coins for "+r.label); return; }
+  addTx("spend", r.label, r.cost);
+  save(); popFloat("−"+r.cost,"#FF6B6B"); toast("Enjoy your "+r.label.toLowerCase()+"! You earned it 🎉"); render();
+}
+function logWeight(){
+  const v = parseFloat(document.getElementById("wtInput").value);
+  if(!v || v<=0){ toast("Enter a weight first"); return; }
+  const t = today();
+  state.weightLog = state.weightLog.filter(e=>e.date!==t);
+  state.weightLog.push({ date:t, kg:v });
+  state.weightLog.sort((a,b)=>a.date<b.date?-1:1);
+  document.getElementById("wtInput").value="";
+  save(); toast("Logged "+v+" kg"); render();
+}
+
+// ---------- fx ----------
+function popFloat(text,color){
+  const el=document.createElement("div"); el.className="float"; el.style.color=color; el.textContent=text;
+  document.querySelector(".header").appendChild(el);
+  coinSpins++; document.getElementById("coin").style.transform="rotateY("+(coinSpins*360)+"deg)";
+  setTimeout(()=>el.remove(),1400);
+}
+let toastTimer;
+function toast(msg){
+  const old=document.querySelector(".toast"); if(old) old.remove();
+  const el=document.createElement("div"); el.className="toast"; el.textContent=msg; document.body.appendChild(el);
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.remove(),2600);
+}
+
+// ---------- weight chart ----------
+function weightChart(){
+  const log = state.weightLog;
+  if(log.length===0) return '<p class="note" style="padding:8px 0;">No entries yet. Log your weight to start the line.</p>';
+  const W=400, H=140, pad=24;
+  const kgs = log.map(e=>e.kg);
+  let min=Math.min(...kgs), max=Math.max(...kgs);
+  if(min===max){ min-=1; max+=1; }
+  const n=log.length;
+  const x=i=> n===1 ? W/2 : pad + i*(W-2*pad)/(n-1);
+  const y=v=> H-pad - (v-min)/(max-min)*(H-2*pad);
+  const pts = log.map((e,i)=>[x(i),y(e.kg)]);
+  const line = pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  const dots = pts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.5" fill="#FFC53D"/>`).join('');
+  const area = `M${pts[0][0].toFixed(1)} ${H-pad} `+pts.map(p=>'L'+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ')+` L${pts[n-1][0].toFixed(1)} ${H-pad} Z`;
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="none" style="display:block">
+    <path d="${area}" fill="rgba(255,197,61,.10)"/>
+    <path d="${line}" fill="none" stroke="#FFC53D" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    ${dots}
+    <text x="2" y="14" fill="#8B93B8" font-size="11" font-family="Inter">${max.toFixed(1)}</text>
+    <text x="2" y="${H-6}" fill="#8B93B8" font-size="11" font-family="Inter">${min.toFixed(1)}</text>
+  </svg>`;
+}
+
+// ---------- render ----------
+function render(){
+  document.getElementById("coins").textContent = state.coins;
+  document.getElementById("streakN").textContent = currentStreak();
+  document.getElementById("runRate").textContent = RUN_RATE;
+  document.getElementById("runKm").textContent = runKm;
+  document.getElementById("runLog").textContent = "+"+Math.round(runKm*RUN_RATE);
+  document.getElementById("streakNote").textContent =
+    "Streak bonus: +"+STREAK_BONUS+" coins at day "+STREAK_MILESTONES.join(", ")+".";
+
+  const ri = rankInfo();
+  document.getElementById("rankName").textContent = ri.cur.icon+" "+ri.cur.name;
+  document.getElementById("rankNext").textContent = ri.next ? ri.toNext+" to "+ri.next.name : "Max rank reached";
+  document.getElementById("rankFill").style.width = ri.pct+"%";
+
+  const t=today();
+  const dw = state.workoutsByDate[t]||[];
+  document.getElementById("workouts").innerHTML = WORKOUTS.map(w=>{
+    const done = dw.includes(w.id);
+    const c = splitCount(w.id);
+    const subLine = c>0 ? `${w.sub} · <span class="lvl">Lv.${splitLevel(w.id)}</span> ×${c}` : w.sub;
+    return `<div class="card${done?' done':''}">
+      <div class="icon">${w.icon}</div>
+      <div><div class="label">${w.label}</div><div class="sub">${subLine}</div></div>
+      <button class="btn${done?' ghost':''}" ${done?'disabled':''} data-wk="${w.id}">${done?'Done ✓':'+'+w.coins}</button>
+    </div>`;
+  }).join("");
+
+  // rotation tracker
+  ["push","pull","legs"].forEach(id=>{
+    document.querySelector('.rot-pills span[data-p="'+id+'"]').classList.toggle('on', !!state.rotationProgress[id]);
+  });
+  document.getElementById("rotBonus").textContent = ROTATION_BONUS;
+  document.getElementById("rotCount").textContent = state.rotations||0;
+
+  // running stats
+  document.getElementById("runTotal").textContent = state.runStats.totalKm.toFixed(1);
+  document.getElementById("runLongest").textContent = state.runStats.longest.toFixed(1);
+  const nm = DISTANCE_MILESTONES.find(m=>state.runStats.totalKm < m.km);
+  document.getElementById("runNext").textContent = nm ? nm.km : "—";
+
+  const dh = state.habitsByDate[t]||[];
+  document.getElementById("habits").innerHTML = HABITS.map(h=>{
+    const done = dh.includes(h.id);
+    return `<div class="card${done?' done':''}">
+      <div class="icon">${h.icon}</div>
+      <div class="label">${h.label}</div>
+      <button class="btn${done?' ghost':''}" ${done?'disabled':''} data-hb="${h.id}">${done?'Done ✓':'+'+h.coins}</button>
+    </div>`;
+  }).join("");
+
+  document.getElementById("rewards").innerHTML = REWARDS.map(r=>{
+    const afford = state.coins >= r.cost;
+    return `<div class="card">
+      <div class="icon">${r.icon}</div>
+      <div><div class="label">${r.label}</div><div class="sub">${r.sub}</div></div>
+      <button class="btn gold" style="${afford?'':'opacity:.4'}" data-rw="${r.id}">${r.cost} 🪙</button>
+    </div>`;
+  }).join("");
+
+  const log = state.weightLog;
+  const sum = document.getElementById("wtSummary");
+  if(log.length){
+    const latest = log[log.length-1].kg, first = log[0].kg, delta = latest-first;
+    const dColor = delta<0 ? 'var(--earn)' : delta>0 ? 'var(--spend)' : 'var(--dim)';
+    const dTxt = log.length>1 ? `${delta>0?'+':''}${delta.toFixed(1)} kg since you started` : 'First entry logged';
+    sum.innerHTML = `<div class="wt-big">${latest.toFixed(1)}<span style="font-size:16px;color:var(--dim)"> kg</span></div>
+      <div class="wt-delta" style="color:${dColor}">${dTxt}</div>`;
+  } else { sum.innerHTML = ''; }
+  document.getElementById("wtChart").innerHTML = weightChart();
+
+  document.getElementById("badges").innerHTML = BADGES.map(b=>{
+    const on = b.test();
+    return `<div class="badge${on?'':' locked'}">
+      <div class="bi">${on?b.icon:'🔒'}</div>
+      <div class="bn">${b.name}</div>
+      <div class="bd">${b.desc}</div>
+    </div>`;
+  }).join("");
+
+  const days = [...Array(7)].map((_,i)=>daysAgo(6-i));
+  const earned = days.map(d=> state.transactions.filter(x=>x.kind==="earn"&&x.date===d).reduce((s,x)=>s+x.amount,0));
+  const max = Math.max(...earned,1);
+  document.getElementById("weekTotal").textContent = earned.reduce((a,b)=>a+b,0);
+  document.getElementById("bars").innerHTML = earned.map((v,i)=>{
+    const wd = new Date(days[i]+"T12:00:00").toLocaleDateString("en",{weekday:"short"});
+    return `<div class="bar-wrap"><div class="bar" style="height:${(v/max)*90}px"></div><div class="bar-day">${wd}</div></div>`;
+  }).join("");
+
+  const list = document.getElementById("txList");
+  if(state.transactions.length===0){
+    list.innerHTML = `<p class="note" style="padding:12px 0;">Nothing yet — log your first workout to start earning.</p>`;
+  } else {
+    list.innerHTML = state.transactions.slice(0,30).map(x=>`
+      <div class="tx">
+        <span>${x.kind==="earn"?'🟢':'🔴'}</span>
+        <div><div>${x.label}</div><div style="font-size:11px;color:var(--dim)">${x.date}</div></div>
+        <span class="tx-amt" style="color:${x.kind==="earn"?'var(--earn)':'var(--spend)'}">${x.kind==="earn"?'+':'−'}${x.amount}</span>
+      </div>`).join("");
+  }
+}
+
+// ---------- events ----------
+document.getElementById("views").addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  if(b.dataset.wk){ logWorkout(WORKOUTS.find(w=>w.id===b.dataset.wk)); }
+  else if(b.dataset.hb){ toggleHabit(HABITS.find(h=>h.id===b.dataset.hb)); }
+  else if(b.dataset.rw){ redeem(REWARDS.find(r=>r.id===b.dataset.rw)); }
+});
+document.getElementById("runMinus").onclick = ()=>{ runKm=Math.max(1,runKm-1); render(); };
+document.getElementById("runPlus").onclick = ()=>{ runKm=runKm+1; render(); };
+document.getElementById("runLog").onclick = logRun;
+document.getElementById("wtLog").onclick = logWeight;
+document.getElementById("wtInput").addEventListener("keydown", e=>{ if(e.key==="Enter") logWeight(); });
+document.getElementById("resetBtn").onclick = ()=>{ if(confirm("Erase all coins, history and weight log? This can't be undone.")){ state=normalize({}); save(); render(); toast("Fresh start."); } };
+
+document.querySelectorAll(".tab").forEach(tab=>{
+  tab.onclick = ()=>{
+    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("on"));
+    tab.classList.add("on");
+    ["earn","shop","weight","quest"].forEach(v=>{
+      document.getElementById("view-"+v).classList.toggle("hidden", v!==tab.dataset.tab);
+    });
+  };
+});
+
+render();
+</script>
+</body>
+</html>
