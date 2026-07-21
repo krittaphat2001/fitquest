@@ -98,6 +98,11 @@
   .badge .bd { font-size:10px; color:var(--dim); margin-top:3px; line-height:1.3; }
   .wt-input { display:flex; gap:10px; align-items:center; }
   .wt-input input { flex:1; background:var(--panel2); border:1px solid var(--line); border-radius:10px; color:var(--ink); font-size:18px; font-family:var(--display); font-weight:700; padding:11px 14px; width:100%; }
+  .wbar { height:8px; background:var(--panel2); border-radius:4px; overflow:hidden; margin:12px 0 10px; }
+  .wbar div { height:100%; width:0%; background:linear-gradient(90deg,#3B82F6,#7CC0FF); border-radius:4px; transition:width .4s ease; }
+  .water-manual { display:flex; gap:10px; }
+  .water-manual input { flex:1; background:var(--panel2); border:1px solid var(--line); border-radius:10px; color:var(--ink); font-size:16px; font-family:var(--display); font-weight:700; padding:10px 12px; width:100%; }
+  .water-manual input:focus { outline:none; border-color:var(--gold); }
   .wt-input input:focus { outline:none; border-color:var(--gold); }
   .wt-big { font-family:var(--display); font-weight:700; font-size:36px; color:var(--gold); line-height:1; }
   .wt-delta { font-size:13px; margin-top:4px; }
@@ -159,6 +164,21 @@
     </section>
     <section class="section">
       <div class="h">Daily habits</div>
+      <div class="card water-card" style="display:block;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div class="icon">💧</div>
+          <div style="flex:1;">
+            <div class="label">Water</div>
+            <div class="sub" id="waterSub">0 / 2,000 ml · +5 at goal</div>
+          </div>
+          <button class="btn" id="waterQuick">+250</button>
+        </div>
+        <div class="wbar"><div id="waterFill"></div></div>
+        <div class="water-manual">
+          <input id="waterInput" type="number" inputmode="numeric" step="50" placeholder="Add ml, e.g. 300" />
+          <button class="btn gold" id="waterAdd" style="margin-left:0;">Add</button>
+        </div>
+      </div>
       <div id="habits"></div>
       <p class="note" id="streakNote"></p>
     </section>
@@ -228,10 +248,13 @@ const WORKOUTS = [
 ];
 const HABITS = [
   { id:"steps", label:"8,000+ steps", coins:10, icon:"👟" },
-  { id:"water", label:"2L of water", coins:5, icon:"💧" },
   { id:"sleep", label:"7+ hours sleep", coins:10, icon:"😴" },
   { id:"nosugar", label:"No added sugar", coins:15, icon:"🚫" },
 ];
+// Water is tracked by amount, not a single tap
+const WATER_GOAL = 2000;   // ml per day
+const WATER_COIN = 5;      // coins awarded once the goal is reached
+const WATER_GLASS = 250;   // quick-add glass size (ml)
 const REWARDS = [
   { id:"softdrink", label:"Soft drink", sub:"One can or cup", cost:40, icon:"🥤" },
   { id:"kitkat", label:"KitKat", sub:"One bar", cost:50, icon:"🍫" },
@@ -266,7 +289,7 @@ const KEY = "fitquest-v2";
 
 // ---------- state ----------
 const empty = {
-  coins:0, transactions:[], workoutsByDate:{}, habitsByDate:{}, weightLog:[],
+  coins:0, transactions:[], workoutsByDate:{}, habitsByDate:{}, weightLog:[], waterByDate:{},
   runStats:{ totalKm:0, longest:0, milestones:[] },
   rotationProgress:{ push:false, pull:false, legs:false }, rotations:0,
 };
@@ -408,6 +431,21 @@ function toggleHabit(h){
   state.habitsByDate[t] = [...done, h.id];
   save(); popFloat("+"+h.coins,"#3DDC97"); render();
 }
+function waterToday(){ return state.waterByDate[today()] || 0; }
+function addWater(ml){
+  ml = Math.round(ml);
+  if(!ml || ml<=0){ toast("Enter an amount in ml"); return; }
+  const t=today(); const prev = state.waterByDate[t]||0; const now = prev+ml;
+  state.waterByDate[t] = now;
+  if(prev < WATER_GOAL && now >= WATER_GOAL){
+    addTx("earn", "Water goal (2L)", WATER_COIN);
+    popFloat("+"+WATER_COIN+" 💧","#3DDC97");
+    toast("💧 2L goal reached! +"+WATER_COIN);
+  } else {
+    popFloat("+"+ml+" ml","#7CC0FF");
+  }
+  save(); render();
+}
 function redeem(r){
   if(state.coins < r.cost){ toast("Need "+(r.cost-state.coins)+" more coins for "+r.label); return; }
   addTx("spend", r.label, r.cost);
@@ -504,6 +542,12 @@ function render(){
   document.getElementById("runNext").textContent = nm ? nm.km : "—";
 
   const dh = state.habitsByDate[t]||[];
+  const wNow = waterToday();
+  document.getElementById("waterFill").style.width = Math.min(100, wNow/WATER_GOAL*100)+"%";
+  document.getElementById("waterQuick").textContent = "+"+WATER_GLASS;
+  document.getElementById("waterSub").innerHTML = wNow>=WATER_GOAL
+    ? `✅ Goal done · ${wNow.toLocaleString()} ml logged today`
+    : `${wNow.toLocaleString()} / ${WATER_GOAL.toLocaleString()} ml · +${WATER_COIN} at goal`;
   document.getElementById("habits").innerHTML = HABITS.map(h=>{
     const done = dh.includes(h.id);
     return `<div class="card${done?' done':''}">
@@ -576,6 +620,9 @@ document.getElementById("runPlus").onclick = ()=>{ runKm=runKm+1; render(); };
 document.getElementById("runLog").onclick = logRun;
 document.getElementById("wtLog").onclick = logWeight;
 document.getElementById("wtInput").addEventListener("keydown", e=>{ if(e.key==="Enter") logWeight(); });
+document.getElementById("waterQuick").onclick = ()=> addWater(WATER_GLASS);
+document.getElementById("waterAdd").onclick = ()=>{ const v=parseInt(document.getElementById("waterInput").value,10); addWater(v); document.getElementById("waterInput").value=""; };
+document.getElementById("waterInput").addEventListener("keydown", e=>{ if(e.key==="Enter"){ const v=parseInt(e.target.value,10); addWater(v); e.target.value=""; } });
 document.getElementById("resetBtn").onclick = ()=>{ if(confirm("Erase all coins, history and weight log? This can't be undone.")){ state=normalize({}); save(); render(); toast("Fresh start."); } };
 
 document.querySelectorAll(".tab").forEach(tab=>{
